@@ -58,6 +58,9 @@ int GraspitInterface::init(int argc, char** argv)
     getDynamics_srv = nh->advertiseService("getDynamics", &GraspitInterface::getDynamicsCB, this);
     setDynamics_srv = nh->advertiseService("setDynamics", &GraspitInterface::setDynamicsCB, this);
 
+    getCheckCollision_srv = nh->advertiseService("getCheckCollision", &GraspitInterface::getCheckCollisionCB, this);
+    setCheckCollision_srv = nh->advertiseService("setCheckCollision", &GraspitInterface::setCheckCollisionCB, this);
+
     autoGrasp_srv = nh->advertiseService("autoGrasp", &GraspitInterface::autoGraspCB, this);
     autoOpen_srv = nh->advertiseService("autoOpen", &GraspitInterface::autoOpenCB, this);
 
@@ -88,6 +91,7 @@ int GraspitInterface::init(int argc, char** argv)
     plan_grasps_as->start();
 
     firstTimeInMainLoop = true;
+    checkCollision = true;
 
     mPlanner = NULL;
     mHandObjectState = NULL;
@@ -388,6 +392,20 @@ bool GraspitInterface::setDynamicsCB(graspit_interface::SetDynamics::Request &re
     return true;
 }
 
+bool GraspitInterface::getCheckCollisionCB(graspit_interface::GetCheckCollision::Request &request,
+                graspit_interface::GetCheckCollision::Response &response)
+{
+    response.collisionCheckEnabled = checkCollision;
+    return true;
+}
+
+bool GraspitInterface::setCheckCollisionCB(graspit_interface::SetCheckCollision::Request &request,
+                graspit_interface::SetCheckCollision::Response &response)
+{
+    checkCollision = request.enableCollisionCheck;
+    return true;
+}
+
 bool GraspitInterface::autoGraspCB(graspit_interface::AutoGrasp::Request &request,
                        graspit_interface::AutoGrasp::Response &response)
 {
@@ -643,15 +661,20 @@ bool GraspitInterface::computeQualityCB(graspit_interface::ComputeQuality::Reque
                                          graspit_interface::ComputeQuality::Response &response)
 {
     CollisionReport colReport;
-    // first test whether the hand is in collision now
-    int numCols = graspitCore->getWorld()->getCollisionReport(&colReport);
-    // if it is in collision, then there should be no reason to calculate the quality
-    if(numCols>0){
-        response.result = response.RESULT_COLLISION;
-        response.epsilon = -1.0;
-        response.volume = -1.0;
-        return true;
+
+    if (checkCollision)
+    {
+        // first test whether the hand is in collision now
+        int numCols = graspitCore->getWorld()->getCollisionReport(&colReport);
+        // if it is in collision, then there should be no reason to calculate the quality
+        if(numCols>0){
+            response.result = response.RESULT_COLLISION;
+            response.epsilon = -1.0;
+            response.volume = -1.0;
+            return true;
+        }
     }
+
     Hand *mHand =graspitCore->getWorld()->getHand(request.id);
     if (mHand==NULL)
     {

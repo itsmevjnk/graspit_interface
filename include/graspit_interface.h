@@ -46,6 +46,8 @@
 #include <graspit_interface/ApproachToContact.h>
 #include <graspit_interface/FindInitialContact.h>
 #include <graspit_interface/DynamicAutoGraspComplete.h>
+#include <graspit_interface/GetCheckCollision.h>
+#include <graspit_interface/SetCheckCollision.h>
 
 // ActionServer includes
 #include <graspit_interface/PlanGraspsAction.h>
@@ -76,6 +78,9 @@ private:
 
   ros::ServiceServer getDynamics_srv;
   ros::ServiceServer setDynamics_srv;
+
+  ros::ServiceServer getCheckCollision_srv;
+  ros::ServiceServer setCheckCollision_srv;
 
   ros::ServiceServer autoGrasp_srv;
   ros::ServiceServer autoOpen_srv;
@@ -112,6 +117,7 @@ private:
   SimAnnPlanner *mPlanner;
 
   bool firstTimeInMainLoop;
+  bool checkCollision;
 
   // Service callbacks
   bool getRobotCB(graspit_interface::GetRobot::Request &request,
@@ -200,6 +206,12 @@ private:
 
   bool dynamicAutoGraspCompleteCB(graspit_interface::DynamicAutoGraspComplete::Request &request,
                                   graspit_interface::DynamicAutoGraspComplete::Response &response);
+
+  bool getCheckCollisionCB(graspit_interface::GetCheckCollision::Request &request,
+                           graspit_interface::GetCheckCollision::Response &response);
+
+  bool setCheckCollisionCB(graspit_interface::SetCheckCollision::Request &request,
+                           graspit_interface::SetCheckCollision::Response &response);
 
   //ActionServer callbacks
   void PlanGraspsCB(const graspit_interface::PlanGraspsGoalConstPtr &goal);
