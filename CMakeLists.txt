@@ -98,6 +98,8 @@ find_package(graspit)
    ApproachToContact.srv
    FindInitialContact.srv
    DynamicAutoGraspComplete.srv
+   GetCheckCollision.srv
+   SetCheckCollision.srv
  )
 
 
